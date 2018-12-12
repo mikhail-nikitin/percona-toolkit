@@ -9843,7 +9843,9 @@ sub main {
    }
 
    if ( $o->get('preserve-triggers') ) {
-      if ( !$o->get('swap-tables') && $o->get('drop-new-table') ) {
+      if ( $o->get('drop-orig-triggers') ) {
+          print ts("Skipping triggers creation since --drop-orig-triggers was specified\n");
+      } elsif ( !$o->get('swap-tables') && $o->get('drop-new-table') ) {
           print ts("Skipping triggers creation since --no-swap-tables was specified along with --drop-new-table\n");
       } else {
           print ts("Adding original triggers to new table.\n");
@@ -11123,6 +11125,8 @@ sub create_triggers {
    if ($o->get('preserve-triggers')) {
        foreach my $trigger_info (@$triggers_info) {
            foreach my $orig_trigger (@{$trigger_info->{orig_triggers}}) {
+               next if ($o->get('drop-orig-triggers'));
+
                my $definer = $orig_trigger->{definer} || '';
                $definer =~ s/@/`@`/;
                $definer = "`$definer`" ;
@@ -12422,6 +12426,11 @@ Please read the documentation for L<--swap-tables>
 If both C<--no-swap-tables> and C<--no-drop-new-table> is set, the trigger will remain
 on the original table and will be duplicated on the new table 
 (the trigger will have a random suffix as no trigger names are unique).
+
+=item --drop-orig-triggers
+
+Set this option to skip original trigger creation for the new table. This is for a case
+when triggers are used for setting default values of deleted columns
 
 =item --new-table-name
 
